@@ -1,0 +1,35 @@
+
+[Graph_1]
+COMMENT = 
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+NODE_2 = TICK_GENERATOR(BUCKET_INTERVAL=0,FIELDS="L1 long = rand(0,100),\
+L2 long = rand(0,100),\
+L3 long = rand(0,100)")
+NODE_2_EP_PARAMETERS_FLAG = -2
+NODE_2_TICK_TYPE = ANY
+NODE_2_X = 732
+NODE_2_Y = 264
+one_to_many_symbol_mapping = 0
+QUERY_BATCH_SIZE = 0
+ROOT = ADD_FIELDS(FIELDS="TOTAL=L1+L2+L3,\
+ODD=CASE(bit_and(L1+L2+L3,1),1,\"true\",\"false\")")
+ROOT_EP_PARAMETERS_FLAG = -2
+ROOT_SOURCE =  NODE_2
+ROOT_X = 758
+ROOT_Y = 514
+SECURITY = DEMO_L1:: 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[_meta]
+app_version = OneTick Display Build tag: BUILD_20180313222322 Build timestamp : 20180313222322
+ApplyTimesDaily = 0
+end = 20200103220000000
+file_version = 1.0
+RunningQuery = 0
+start = 20050103150000000
+SYMBOL_DATE = 
+TZ = GMT
+USER_NAME = Andrew3

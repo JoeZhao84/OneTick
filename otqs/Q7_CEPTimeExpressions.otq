@@ -1,0 +1,29 @@
+
+[CEP]
+COMMENT = 
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+one_to_many_symbol_mapping = 0
+QUERY_BATCH_SIZE = 0
+ROOT = PASSTHROUGH
+ROOT_TICK_TYPE = EXMP
+ROOT_X = 444
+ROOT_Y = 148
+SECURITY = TEST_FEED::S1 0
+SECURITY = TEST_FEED::S2 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[_meta]
+app_version = OneTick Display Build tag: BUILD_20160130223253 Build timestamp : 20160130223253
+ApplyTimesDaily = 0
+end = 20031201150000000
+end_expression = now()+10000
+file_version = 1.0
+RunningQuery = 1
+start = 20031201110000000
+start_expression = now()
+SYMBOL_DATE = 
+TZ = EST5EDT
+USER_NAME = Andrew

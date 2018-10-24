@@ -1,0 +1,150 @@
+
+[TickDescriptor]
+COMMENT = If a field name ends in PRICE and our currency is USD convert the price from cents to dollars.
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+NODE_2 = CSV_FILE_LISTING(FILE_CONTENTS="#double BID_PRICE ,double ASK_PRICE, string CURRENCY,STRING PRICE_UNIT\
+100,101,GBP,POUNDS\
+101,102,GBP,POUNDS\
+200,201,USD,CENTS\
+201,202,USD,CENTS")
+NODE_2_DATA_OUTPUT = 1
+NODE_2_EP_PARAMETERS_FLAG = 0
+NODE_2_TICK_TYPE = ANY
+NODE_2_X = 1186
+NODE_2_Y = 414
+one_to_many_symbol_mapping = 0
+QUERY_BATCH_SIZE = 0
+ROOT = PER_TICK_SCRIPT(SCRIPT="string LOCAL::FIELD_NAME=\"\";\
+double LOCAL::TEMP=0.0;\
+/* If the currency is USD divide any double field of the form *PRICE by 100 ) */\
+\
+for (TICK_DESCRIPTOR_FIELD LOCAL::f : LOCAL::INPUT_TICK_DESCRIPTOR_FIELDS) {\
+	LOCAL::FIELD_NAME = LOCAL::f.GET_FIELD_NAME();\
+	\
+	if( REGEX_MATCH(LOCAL::FIELD_NAME , \".*PRICE\")==1 && CURRENCY==\"USD\" && LOCAL::f.GET_TYPE()==\"double\" ) {\
+		LOCAL::TEMP =  LOCAL::INPUT_TICK.GET_DOUBLE_VALUE(LOCAL::FIELD_NAME)/100 ;\
+		LOCAL::OUTPUT_TICK.SET_DOUBLE_VALUE(LOCAL::FIELD_NAME,LOCAL::TEMP);\
+		LOCAL::OUTPUT_TICK.SET_STRING_VALUE(\"CURRENCY\",\"DOLLARS\");\
+	}\
+}")
+ROOT_EP_PARAMETERS_FLAG = 0
+ROOT_SOURCE =  NODE_2
+ROOT_X = 1252
+ROOT_Y = 872
+SECURITY = LOCAL:: 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[TickDescriptorFunc]
+COMMENT = If a field name ends in PRICE and our currency is USD convert the price from cents to dollars.
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+NODE_2 = CSV_FILE_LISTING(FILE_CONTENTS="#double BID_PRICE ,double ASK_PRICE, string CURRENCY\
+100,101,GBP\
+101,102,GBP\
+200,201,USD\
+201,202,USD")
+NODE_2_DATA_OUTPUT = 1
+NODE_2_EP_PARAMETERS_FLAG = 0
+NODE_2_TICK_TYPE = ANY
+NODE_2_X = 1224
+NODE_2_Y = 220
+one_to_many_symbol_mapping = 0
+QUERY_BATCH_SIZE = 0
+ROOT = PER_TICK_SCRIPT(SCRIPT="long cents_to_dollars()\
+{\
+	string LOCAL::FIELD_NAME=\"\";\
+	double LOCAL::TEMP=0.0;\
+\
+\
+	for (TICK_DESCRIPTOR_FIELD LOCAL::f : LOCAL::INPUT_TICK_DESCRIPTOR_FIELDS) {\
+		LOCAL::FIELD_NAME = LOCAL::f.GET_FIELD_NAME();\
+	\
+		if( REGEX_MATCH(LOCAL::FIELD_NAME , \".*PRICE\")==1 && CURRENCY==\"USD\") {\
+			LOCAL::TEMP =  LOCAL::INPUT_TICK.GET_DOUBLE_VALUE(LOCAL::FIELD_NAME)/100 ;\
+			LOCAL::OUTPUT_TICK.SET_DOUBLE_VALUE(LOCAL::FIELD_NAME,LOCAL::TEMP);\
+		}\
+	}\
+	return 1;\
+}\
+\
+double multiply( double input, double multiplier)\
+{\
+	return input*multiplier;\
+}\
+\
+long main()\
+{\
+	double MULTIPLE=0;\
+	long LOCAL::TEMPL=0;\
+	LOCAL::TEMPL=cents_to_dollars();\
+/*	MULTIPLE=multiply(100,202.123); */\
+	return 1;\
+}")
+ROOT_EP_PARAMETERS_FLAG = 0
+ROOT_SOURCE =  NODE_2
+ROOT_X = 1238
+ROOT_Y = 588
+SECURITY = LOCAL:: 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[CalledFunction]
+COMMENT = If a field name ends in PRICE and our currency is USD convert the price from cents to dollars.
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+NODE_2 = CSV_FILE_LISTING(FILE_CONTENTS="#double BID_PRICE ,double ASK_PRICE, string CURRENCY\
+100,101,GBP\
+101,102,GBP\
+200,201,USD\
+201,202,USD")
+NODE_2_DATA_OUTPUT = 1
+NODE_2_EP_PARAMETERS_FLAG = 0
+NODE_2_TICK_TYPE = ANY
+NODE_2_X = 1186
+NODE_2_Y = 414
+one_to_many_symbol_mapping = 0
+QUERY_BATCH_SIZE = 0
+ROOT = ADD_FIELDS(FIELDS="NEW_PRICE double =EVAL_PER_TICK_SCRIPT_FUNC(\"THIS::TickDescriptorFunc\",\"\",\"multiply\",17.0,ASK_PRICE),\
+NINETYNINE long = EVAL_PER_TICK_SCRIPT_FUNC(\"THIS::StandaloneFunctions\",\"\",\"return99\")")
+ROOT_EP_PARAMETERS_FLAG = 0
+ROOT_SOURCE =  NODE_2
+ROOT_X = 1250
+ROOT_Y = 624
+SECURITY = LOCAL:: 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[StandaloneFunctions]
+COMMENT = NOTE: Scripts like this must have a main, even if empty.
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+one_to_many_symbol_mapping = 0
+PER_TICK_SCRIPT = long return99()\
+{\
+	return 99;\
+}\
+\
+long main()\
+{\
+}
+QUERY_BATCH_SIZE = 0
+SHOW_TEMPLATE = 
+TICK_TYPE = TRD
+TYPE = PER_TICK_SCRIPT
+
+[_meta]
+app_version = OneTick Display Build tag: BUILD_20180201113822 Build timestamp : 20180201113822
+ApplyTimesDaily = 0
+end = 20170922100000000
+file_version = 1.0
+RunningQuery = 0
+start = 20170922090000000
+SYMBOL_DATE = 
+TZ = GMT
+USER_NAME = Andrew3

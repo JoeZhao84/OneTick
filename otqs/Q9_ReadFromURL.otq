@@ -1,0 +1,59 @@
+
+[http]
+COMMENT = 
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+one_to_many_symbol_mapping = 0
+QUERY_BATCH_SIZE = 0
+ROOT = OMD::READ_FROM_URL(URL="http://masteretfdata.com/Download-Files/AllCompositesTypes.csv",SEPARATOR="(\\10)")
+ROOT_EP_PARAMETERS_FLAG = 0
+ROOT_TICK_TYPE = ETF_RFQ
+ROOT_X = 636
+ROOT_Y = 160
+SECURITY = LOCAL:: 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[ftp]
+COMMENT = 
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+one_to_many_symbol_mapping = 0
+QUERY_BATCH_SIZE = 0
+ROOT = OMD::READ_FROM_URL(URL="ftp://omddist:%21md72R@ftp.onetick.com//dist/RELEASE_1.14/ReleaseNotes_rel_1_14_20160628201946.txt",SEPARATOR="(\\13)(\\10)")
+ROOT_EP_PARAMETERS_FLAG = 0
+ROOT_TICK_TYPE = ETF_RFQ
+ROOT_X = 1280
+ROOT_Y = 378
+SECURITY = LOCAL:: 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[file]
+COMMENT = 
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+one_to_many_symbol_mapping = 0
+QUERY_BATCH_SIZE = 0
+ROOT = OMD::READ_FROM_URL(URL="file:///C:/tmp/Book1.csv",SEPARATOR="(\\13)(\\10)")
+ROOT_EP_PARAMETERS_FLAG = 0
+ROOT_TICK_TYPE = ETF_RFQ
+ROOT_X = 1280
+ROOT_Y = 378
+SECURITY = LOCAL:: 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[_meta]
+app_version = OneTick Display Build tag: BUILD_20180201113822 Build timestamp : 20180201113822
+ApplyTimesDaily = 0
+end = 20160319000000000
+file_version = 1.0
+RunningQuery = 0
+start = 20160318093000000
+SYMBOL_DATE = 
+TZ = EST5EDT
+USER_NAME = kirill
