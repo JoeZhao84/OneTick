@@ -1,0 +1,108 @@
+
+[CurrentVsCurrentBest]
+COMMENT = 
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+NODE_10 = DECLARE_STATE_VARIABLES(SCOPE=QUERY,VARIABLES="TICK_SET(LATEST_TICK,EXCHANGE) TICKS; int TICK_SET_SEQNUM=1")
+NODE_10_COMMENT = Declare a tick set to hold the latest tick for a given SOURCE and SIZE
+NODE_10_SOURCE =  NODE_11
+NODE_10_X = 1672
+NODE_10_Y = 1036
+NODE_11 = ADD_FIELD(FIELD="TS msectime",VALUE=TIMESTAMP)
+NODE_11_COMMENT = Save the timestamp here as we will need ot later to see if the current "best" is stale. We lose the timestamp when we add the tick to a tickset.
+NODE_11_SOURCE =  NODE_14
+NODE_11_X = 1672
+NODE_11_Y = 804
+NODE_12 = LOW_TICK(BUCKET_INTERVAL_UNITS=FLEXIBLE,BUCKET_END_CRITERIA="DELIMITER=\"D\"",BOUNDARY_TICK_BUCKET=PREVIOUS,INPUT_FIELD_NAME=ASK_PRICE)
+NODE_12_COMMENT = Best ask is the lowestt ask in the current tick set. NOTE There may be more than one "best", i.e more than one provider currently quoting the same lowest bid. We only return 1 of them.
+NODE_12_NAME = BEST_ASK
+NODE_12_SOURCE =  NODE_7
+NODE_12_X = 2498
+NODE_12_Y = 1988
+NODE_13 = ADD_FIELD(FIELD=TICK_SET_SEQNUM,VALUE="STATE::TICK_SET_SEQNUM")
+NODE_13_NAME = BEST_ASK
+NODE_13_SOURCE =  NODE_18
+NODE_13_X = 2508
+NODE_13_Y = 2444
+NODE_14 = NUM_TICKS(IS_RUNNING_AGGR=true,OUTPUT_FIELD_NAME=SEQNUM)
+NODE_14_COMMENT = Add an index to identify this tick later.
+NODE_14_NAME = QUOTE
+NODE_14_SOURCE =  NODE_4..IF
+NODE_14_X = 2244
+NODE_14_Y = 576
+NODE_16 = ADD_FIELD(FIELD=TICK_SET_SEQNUM,VALUE="STATE::TICK_SET_SEQNUM")
+NODE_16_COMMENT = Set the current state of the state variable into a sequence number ineach  tick
+NODE_16_NAME = BEST_BID
+NODE_16_SOURCE =  NODE_17
+NODE_16_X = 836
+NODE_16_Y = 2444
+NODE_17 = TABLE(FIELDS="BID_PRICE,EXCHANGE,TS")
+NODE_17_SOURCE =  NODE_6
+NODE_17_X = 830
+NODE_17_Y = 2238
+NODE_18 = TABLE(FIELDS="ASK_PRICE,EXCHANGE,TS")
+NODE_18_SOURCE =  NODE_12
+NODE_18_X = 2502
+NODE_18_Y = 2238
+NODE_2 = PASSTHROUGH(FIELDS="BID_PRICE,ASK_PRICE,EXCHANGE")
+NODE_21 = JOIN(JOIN_CRITERIA="BEST_BID.TICK_SET_SEQNUM=BEST_ASK.TICK_SET_SEQNUM and \
+SAMETIME(BEST_BID.TIMESTAMP,BEST_ASK.TIMESTAMP)",JOIN_TYPE=INNER,LEFT_SOURCE=BEST_BID)
+NODE_21_COMMENT = Join the best bid and best ask back together again using sequence number
+NODE_21_NAME = BEST
+NODE_21_SOURCE =  NODE_16 NODE_13
+NODE_21_X = 1672
+NODE_21_Y = 2692
+NODE_2_TICK_TYPE = QTE
+NODE_2_X = 2414
+NODE_2_Y = 104
+NODE_4 = WHERE_CLAUSE(WHERE="BID_PRICE!=0 and ASK_PRICE!=0 and (ASK_PRICE-BID_PRICE<5)")
+NODE_4_COMMENT = Exclude  dirty data
+NODE_4_SOURCE =  NODE_2
+NODE_4_X = 2412
+NODE_4_Y = 328
+NODE_6 = HIGH_TICK(BUCKET_INTERVAL_UNITS=FLEXIBLE,BUCKET_END_CRITERIA="DELIMITER=\"D\"",BOUNDARY_TICK_BUCKET=PREVIOUS,INPUT_FIELD_NAME=BID_PRICE)
+NODE_6_COMMENT = Best bid is the highest bid in the current tick set. NOTE There may be more than one "best", i.e more than one provider currently quoting the same higest bid. We only return 1 of them.
+NODE_6_NAME = BEST_BID
+NODE_6_SOURCE =  NODE_7
+NODE_6_X = 828
+NODE_6_Y = 1988
+NODE_7 = UPDATE_FIELD(FIELD="STATE::TICK_SET_SEQNUM",VALUE="STATE::TICK_SET_SEQNUM+1",WHERE="DELIMITER[-1]=\"D\"")
+NODE_7_COMMENT = Use a state variable incremented wherever we see a new state of the tck set so we can match the tick set dump with the original QTE ticks.
+NODE_7_SOURCE =  NODE_8
+NODE_7_X = 1672
+NODE_7_Y = 1706
+NODE_8 = DUMP_TICK_SET(TICK_SET="STATE::TICKS",DELIMITER=FLAG_AT_END)
+NODE_8_COMMENT = Dump  the current state of the tick set with a delimiter "D" at the end of each.\
+So we have all of the last bid/ask prices for all exchanges in a format where we can aggregate using FLEXIBLE buckets.
+NODE_8_SOURCE =  NODE_9
+NODE_8_X = 1672
+NODE_8_Y = 1468
+NODE_9 = UPDATE_TICK_SETS(TICK_SETS="STATE::TICKS")
+NODE_9_COMMENT = Update the tickset with this tick.\
+So, as out tick set is keyed by exchange, we have a tick set containing the current tick for this exchange and the last tick for all other exchanges we've seen so far.
+NODE_9_SOURCE =  NODE_10
+NODE_9_X = 1672
+NODE_9_Y = 1252
+one_to_many_symbol_mapping = 0
+QUERY_BATCH_SIZE = 0
+ROOT = JOIN(JOIN_CRITERIA="QUOTE.SEQNUM=BEST.BEST_BID.TICK_SET_SEQNUM and \
+SAMETIME(QUOTE.TIMESTAMP,BEST.TIMESTAMP)",JOIN_TYPE=INNER,LEFT_SOURCE=QUOTE)
+ROOT_COMMENT = Join each quote to the curret best bid and best ask ticks.
+ROOT_SOURCE =  NODE_21 NODE_14
+ROOT_X = 3572
+ROOT_Y = 3092
+SECURITY = DEMO_L1::AA 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[_meta]
+app_version = OneTick Display Build tag: rel_1_13_20150602095212 Build timestamp : 20150602095212
+ApplyTimesDaily = 0
+end = 20031201100000000
+file_version = 1.0
+RunningQuery = 0
+start = 20031201090000000
+SYMBOL_DATE = 
+TZ = EST5EDT
+USER_NAME = Andrew

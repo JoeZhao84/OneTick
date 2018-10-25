@@ -1,0 +1,319 @@
+
+[BasicByTime]
+COMMENT = Every hour seconds output the sum of size for the last hour seconds.\
+OUTPUT_INTERVAL=INPUT_INTERVAL so no need to specify OUTPUT_INTERVAL.
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+NODE_2 = PASSTHROUGH
+NODE_2_TICK_TYPE = TRD
+NODE_2_X = 368
+NODE_2_Y = 70
+one_to_many_symbol_mapping = 0
+PARAMETER = interval 600
+QUERY_BATCH_SIZE = 0
+ROOT = SUM(BUCKET_INTERVAL="$interval")
+ROOT_SOURCE =  NODE_2
+ROOT_X = 350
+ROOT_Y = 326
+SECURITY = FULL_DEMO_L1::IBM 0 No
+SECURITY = DEMO_L1::AA 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[Cumulative]
+COMMENT = Cumulative sum of SIZE.\
+Every time we get an input tick we produce qn output tick adding the value of SIZE.\
+No need to change anything excep IS_RUNNING_AGGR to "true"
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+NODE_2 = PASSTHROUGH(FIELDS=SIZE)
+NODE_2_TICK_TYPE = TRD
+NODE_2_X = 344
+NODE_2_Y = 140
+one_to_many_symbol_mapping = 0
+QUERY_BATCH_SIZE = 0
+ROOT = SUM(IS_RUNNING_AGGR=true,OUTPUT_FIELD_NAME=SUM)
+ROOT_SOURCE =  NODE_2
+ROOT_X = 326
+ROOT_Y = 400
+SECURITY = FULL_DEMO_L1::IBM 0 No
+SECURITY = DEMO_L1::AA 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[DifferentInputandOutput]
+COMMENT = Bucket interval and Output interval differ. So every 5 minutes we output the sum of size over the last hour.
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+NODE_2 = PASSTHROUGH
+NODE_2_TICK_TYPE = TRD
+NODE_2_X = 312
+NODE_2_Y = 48
+one_to_many_symbol_mapping = 0
+QUERY_BATCH_SIZE = 0
+ROOT = SUM(BUCKET_INTERVAL=3600,OUTPUT_INTERVAL=300,IS_RUNNING_AGGR=true,OUTPUT_FIELD_NAME=SUM)
+ROOT_SOURCE =  NODE_2
+ROOT_X = 294
+ROOT_Y = 316
+SECURITY = FULL_DEMO_L1::IBM 0 No
+SECURITY = DEMO_L1::AA 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[BasicGrouped]
+COMMENT = Seperate sums for each distict value of EXCHANGE. BUCKET_INTERVAL=0 so we see one bucket for all ticks.
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+NODE_2 = PASSTHROUGH
+NODE_2_TICK_TYPE = TRD
+NODE_2_X = 478
+NODE_2_Y = 122
+one_to_many_symbol_mapping = 0
+QUERY_BATCH_SIZE = 0
+ROOT = SUM(OUTPUT_FIELD_NAME=SUM,GROUP_BY="EXCHANGE,G127")
+ROOT_SOURCE =  NODE_2
+ROOT_X = 460
+ROOT_Y = 402
+SECURITY = FULL_DEMO_L1::IBM 0 No
+SECURITY = DEMO_L1::AA 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[GroupedByTime]
+COMMENT = Seperate sums for each distict value of EXCHANGE. Note that the first bucket for each value of EXCHANGE only occurs when we see a tick with that value (because the query doesn't know up front what values it will come across).
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+NODE_2 = PASSTHROUGH
+NODE_2_TICK_TYPE = TRD
+NODE_2_X = 620
+NODE_2_Y = 130
+one_to_many_symbol_mapping = 0
+QUERY_BATCH_SIZE = 0
+ROOT = SUM(BUCKET_INTERVAL=600,OUTPUT_FIELD_NAME=SUM,GROUP_BY=EXCHANGE)
+ROOT_SOURCE =  NODE_2
+ROOT_X = 624
+ROOT_Y = 378
+SECURITY = FULL_DEMO_L1::IBM 0 No
+SECURITY = DEMO_L1::AA 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[Condition]
+COMMENT = Start new bucket when a condition is TRUE rather than at a fixed time or number of ticks.\
+Part one adds a cumulative sum.\
+Part 2 generates a new bicket when the sum divided by 10000 and rounded changes. So we generate a new tick each time 100000 shares ( or greater if the sum is not exact) have been traded. We then look at the time gap between these buckets so we can see, across the day, how long it has taken for 10000 shares to be shifted.\
+Note that we cannot do index calculations directly on TIMESTAMP (i.e reference TIMESTAMP[-1]) so we need to copy the timestamp to a new field.
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+HIDDEN_COLUMN = SUM VALUE_COMPARE_DEMO_L1::AA
+HIDDEN_COLUMN = TIMECOPY VALUE_COMPARE_DEMO_L1::AA
+NODE_11 = ADD_FIELD(FIELD=GAP,VALUE="TIMECOPY-TIMECOPY[-1]")
+NODE_11_SOURCE =  NODE_9
+NODE_11_X = 1428
+NODE_11_Y = 1250
+NODE_12 = ADD_FIELD(FIELD=HUNDREDS_OF_THOUSANDS,VALUE="DIV(  SUM,100000 )")
+NODE_12_SOURCE =  NODE_5
+NODE_12_X = 1428
+NODE_12_Y = 518
+NODE_2 = PASSTHROUGH(FIELDS=SIZE)
+NODE_2_TICK_TYPE = TRD
+NODE_2_X = 1428
+NODE_2_Y = 100
+NODE_5 = SUM(IS_RUNNING_AGGR=true,OUTPUT_FIELD_NAME=SUM)
+NODE_5_SOURCE =  NODE_2
+NODE_5_X = 1428
+NODE_5_Y = 306
+NODE_7 = SUM(BUCKET_INTERVAL_UNITS=FLEXIBLE,BUCKET_END_CRITERIA="HUNDREDS_OF_THOUSANDS!=HUNDREDS_OF_THOUSANDS[-1]",BOUNDARY_TICK_BUCKET=PREVIOUS,ALL_FIELDS_FOR_SLIDING=true,OUTPUT_FIELD_NAME=SUM)
+NODE_7_SOURCE =  NODE_12
+NODE_7_X = 1428
+NODE_7_Y = 778
+NODE_9 = ADD_FIELD(FIELD="TIMECOPY msectime",VALUE=TIMESTAMP)
+NODE_9_SOURCE =  NODE_7
+NODE_9_X = 1428
+NODE_9_Y = 1038
+one_to_many_symbol_mapping = 0
+QUERY_BATCH_SIZE = 0
+ROOT = VALUE_COMPARE(FIELD=GAP,VALUE=1000000,RELATIONSHIP_TO_CONST=LT)
+ROOT_SOURCE =  NODE_11
+ROOT_X = 1428
+ROOT_Y = 1494
+SECURITY = FULL_DEMO_L1::IBM 0 No
+SECURITY = DEMO_L1::AA 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[AllFieldsForSliding]
+COMMENT = Using IS_RUNNING_AGGR with a non-zero BUCKET_TIME\
+First part of the query creates bucketed sum of size.\
+We then add an index using NUM_TICKS, IS_RUNNING_AGGR=true and BUCKET_INTERVAL=0 to add an index to our buckets.\
+We then filter out just buckets 10 and 11 (at11:10 and 11:20).\
+So we have 2 ticks at 11:10 qand 11:20\
+\
+With All fields for sliding "true" we see just these 2 ticks and see all fields in each tick.\
+With All fields for sliding "false" we only see the aggregation output and we see ticks when the ticks at 11:10 and 11:20 leave the 1 hour bucket at 12L10 and 12:20
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+NODE_10 = NUM_TICKS(IS_RUNNING_AGGR=true,OUTPUT_FIELD_NAME=INDEX)
+NODE_10_SOURCE =  NODE_4
+NODE_10_X = 348
+NODE_10_Y = 620
+NODE_12 = WHERE_CLAUSE(WHERE="INDEX=10 or INDEX=11")
+NODE_12_DATA_OUTPUT = 1
+NODE_12_SOURCE =  NODE_10
+NODE_12_X = 348
+NODE_12_Y = 830
+NODE_2 = PASSTHROUGH(FIELDS=SIZE)
+NODE_2_TICK_TYPE = TRD
+NODE_2_X = 354
+NODE_2_Y = 90
+NODE_4 = SUM(BUCKET_INTERVAL=600,OUTPUT_FIELD_NAME=SUM)
+NODE_4_SOURCE =  NODE_2
+NODE_4_X = 336
+NODE_4_Y = 348
+one_to_many_symbol_mapping = 0
+PARAMETER = ALL_FIELD_FORS_SLIDING true
+QUERY_BATCH_SIZE = 0
+ROOT = SUM(BUCKET_INTERVAL=3600,IS_RUNNING_AGGR=true,ALL_FIELDS_FOR_SLIDING="$ALL_FIELD_FORS_SLIDING",INPUT_FIELD_NAME=SUM)
+ROOT_SOURCE =  NODE_12..IF
+ROOT_X = 280
+ROOT_Y = 1066
+SECURITY = FULL_DEMO_L1::IBM 0 No
+SECURITY = DEMO_L1::AA 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[basicByTimeWRONG]
+COMMENT = Every hour seconds output the sum of size for the last hour seconds.\
+OUTPUT_INTERVAL=INPUT_INTERVAL so no need to specify OUTPUT_INTERVAL.\
+BUT that's what some of you have been doing.\
+For large datasets its very inefficient.\
+Also may not be doing what you want. Compare with BasicByTime but make the time interval NOT equal an exact number of buckets (e.g end at 16:00 )
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+NODE_2 = PASSTHROUGH(FIELDS=SIZE)
+NODE_2_TICK_TYPE = TRD
+NODE_2_X = 1744
+NODE_2_Y = 270
+one_to_many_symbol_mapping = 0
+QUERY_BATCH_SIZE = 0
+ROOT = SUM(BUCKET_INTERVAL=3600,OUTPUT_INTERVAL=3600,IS_RUNNING_AGGR=true,ALL_FIELDS_FOR_SLIDING=true,OUTPUT_FIELD_NAME=SUM)
+ROOT_SOURCE =  NODE_2
+ROOT_X = 1726
+ROOT_Y = 528
+SECURITY = FULL_DEMO_L1::IBM 0 No
+SECURITY = DEMO_L1::AA 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[TimeSeriesType]
+COMMENT = EVENT_TS - Just looks at this bucket. If we have no ticks in this bucket then we return zero.\
+STATE_TS - If we have an empty bucket then inherit result from previous bucket.\
+Not relevent to all aggregators !
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+NODE_2 = PASSTHROUGH
+NODE_2_TICK_TYPE = TRD
+NODE_2_X = 772
+NODE_2_Y = 62
+NODE_3 = TIME_FILTER(DISCARD_ON_MATCH=true,START_TIME=100000000,END_TIME=120000000,TIMEZONE=EST5EDT)
+NODE_3_SOURCE =  NODE_2
+NODE_3_X = 926
+NODE_3_Y = 318
+NODE_4 = TIME_FILTER(DISCARD_ON_MATCH=true,START_TIME=140000000,END_TIME=150000000,TIMEZONE=EST5EDT)
+NODE_4_SINK =  NODE_5.IF.
+NODE_4_SOURCE =  NODE_3..IF
+NODE_4_X = 822
+NODE_4_Y = 736
+NODE_5 = HIGH(BUCKET_INTERVAL=1800,TIME_SERIES_TYPE=STATE_TS)
+NODE_5_NAME = STATE_TS
+NODE_5_X = 1042
+NODE_5_Y = 1036
+one_to_many_symbol_mapping = 0
+QUERY_BATCH_SIZE = 0
+ROOT = HIGH(BUCKET_INTERVAL=1800)
+ROOT_NAME = EVENT_TS
+ROOT_SOURCE =  NODE_4..IF
+ROOT_X = 376
+ROOT_Y = 1020
+SECURITY = FULL_DEMO_L1::IBM 0 No
+SECURITY = DEMO_L1::AA 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[FilteOutShortPeriods]
+COMMENT = 
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+NODE_1 = COMPUTE(COMPUTE="AVERAGE(INPUT_FIELD_NAME=PRICE),\
+NUM_TICKS",BUCKET_INTERVAL="$INTERVAL")
+NODE_1_TICK_TYPE = TRD
+NODE_1_X = 886
+NODE_1_Y = 148
+NODE_4 = ADD_FIELD(FIELD="TS msectime",VALUE=TIMESTAMP)
+NODE_4_SOURCE =  NODE_1
+NODE_4_X = 1062
+NODE_4_Y = 436
+NODE_6 = ADD_FIELD(FIELD=DIFF,VALUE="(TS-TS[-1])/1000")
+NODE_6_SOURCE =  NODE_4
+NODE_6_X = 1138
+NODE_6_Y = 666
+one_to_many_symbol_mapping = 0
+PARAMETER = INTERVAL 3600
+QUERY_BATCH_SIZE = 0
+ROOT = VALUE_COMPARE(FIELD=DIFF,VALUE="$INTERVAL")
+ROOT_SOURCE =  NODE_6
+ROOT_X = 1190
+ROOT_Y = 976
+SECURITY = DEMO_L1::AA 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[ComputeOCHLV]
+COMMENT = 
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+one_to_many_symbol_mapping = 0
+QUERY_BATCH_SIZE = 0
+ROOT = COMPUTE(COMPUTE="HIGH,LOW,FIRST,LAST,SUM",BUCKET_INTERVAL=3600,APPEND_OUTPUT_FIELD_NAME=false)
+ROOT_TICK_TYPE = TRD
+ROOT_X = 1152
+ROOT_Y = 318
+SECURITY = DEMO_L1::AA 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[Compute2Averages]
+COMMENT = 
+CPU_NUMBER = 1
+DB_HINT_FOR_PROCESSING_HOST = 
+graph_reuse = 0
+one_to_many_symbol_mapping = 0
+QUERY_BATCH_SIZE = 0
+ROOT = COMPUTE(COMPUTE="AVERAGE(INPUT_FIELD_NAME=PRICE,OUTPUT_FIELD_NAME=PRICE),AVERAGE(INPUT_FIELD_NAME=SIZE,OUTPUT_FIELD_NAME=SIZE)",BUCKET_INTERVAL=3600)
+ROOT_TICK_TYPE = TRD
+ROOT_X = 1152
+ROOT_Y = 318
+SECURITY = DEMO_L1::AA 0
+SHOW_TEMPLATE = 
+TYPE = GRAPH
+
+[_meta]
+app_version = OneTick Display Build tag: BUILD_20140911150333 Build timestamp : 20140911150333
+ApplyTimesDaily = 0
+end = 20031201160000000
+file_version = 1.0
+RunningQuery = 0
+start = 20031201093000000
+SYMBOL_DATE = 
+TZ = EST5EDT
